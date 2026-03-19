@@ -1,4 +1,4 @@
-# Experiment-2：旋转与变换（MVP）
+﻿# Experiment-2：旋转与变换（MVP）
 
 本项目是计算机图形学课程实验二的实现，使用 Taichi 框架完成了一个三维线框三角形的 MVP（Model-View-Projection）变换与交互旋转演示。程序运行后会弹出一个 `700x700` 的窗口，按下 `A` / `D` 键可控制图形绕 `Z` 轴旋转，按 `Esc` 退出。
 
@@ -123,10 +123,10 @@ uv run python -m src.work1.main --dry-run
 - `D`：顺时针旋转（绕 `Z` 轴）
 - `Esc`：退出程序
 
-可在本节补充你的运行截图/GIF（例如 `work1_demo.gif`）：
+可在本节补充你的运行截图/GIF（例如 `video.gif`）：
 
 ```markdown
-![实验二运行效果](work1_demo.gif)
+![实验二运行效果](video.gif)
 ```
 
 ## 六、实验结论
