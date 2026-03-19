@@ -1,41 +1,36 @@
 ﻿# Experiment-2：旋转与变换（MVP）
 
-本项目是计算机图形学课程实验二的实现，使用 Taichi 框架完成了一个三维线框三角形的 MVP（Model-View-Projection）变换与交互旋转演示。程序运行后会弹出一个 `700x700` 的窗口，按下 `A` / `D` 键可控制图形绕 `Z` 轴旋转，按 `Esc` 退出。
+本项目是计算机图形学课程实验二的实现，使用 Taichi 框架完成了 MVP（Model-View-Projection）变换与交互旋转演示。基础任务支持线框三角形，选做任务扩展为线框立方体并支持三轴旋转。程序运行后会弹出一个 `700x700` 的窗口，可通过键盘交互控制旋转与图元切换。
 
 ## 一、项目结构
 
 ```
-CG-lab/
-├── main.py                # 根目录入口（预留）
+experiment-2/
 ├── pyproject.toml         # 项目配置与依赖声明
-├── uv.lock                # 依赖版本锁定
+├── README.md              # 实验说明文档
 └── src/
-    ├── Work0/             # 实验 0
     └── work1/             # 实验 2（旋转与变换）
         ├── __init__.py
-        ├── config.py      # 实验参数配置（窗口、相机、裁剪面、按键步长）
-        └── main.py        # MVP 矩阵实现与渲染主循环
+        ├── config.py      # 参数配置（窗口、相机、投影、图元与边）
+        └── main.py        # MVP 矩阵实现、交互与渲染主循环
 ```
 
 项目采用 `src` 布局，`work1` 为本次实验包，内部按职责拆分为两个核心模块：
 
-- **config.py**：集中存放窗口参数、相机参数、投影参数和图元配置，如 `EYE_FOV`、`Z_NEAR`、`Z_FAR`、`TRIANGLE_VERTICES` 等。
-- **main.py**：实现 `Model / View / Projection` 三个矩阵函数，完成顶点的齐次坐标变换、透视除法和屏幕映射，并驱动 GUI 渲染循环。
+- **config.py**：集中存放窗口参数、相机参数、投影参数和图元配置，如 `EYE_FOV`、`Z_NEAR`、`Z_FAR`、`TRIANGLE_VERTICES`、`CUBE_VERTICES` 等。
+- **main.py**：实现 `Model / View / Projection` 三个矩阵函数，完成顶点的齐次坐标变换、透视除法和屏幕映射，并驱动 GUI 交互渲染循环。
 
 ## 二、实现思路
 
 ### 2.1 模型变换（Model）
 
-`get_model_matrix(angle)` 接收角度（角度制），先转换为弧度，再构造绕 `Z` 轴旋转矩阵：
+`get_model_matrix(angle_z, angle_y=0, angle_x=0)` 接收三轴角度（角度制），先转换为弧度，再构造绕 `X/Y/Z` 轴旋转矩阵并进行组合：
 
 ```
-[ cosθ  -sinθ  0  0 ]
-[ sinθ   cosθ  0  0 ]
-[  0      0    1  0 ]
-[  0      0    0  1 ]
+[ R_z ] [ R_y ] [ R_x ]
 ```
 
-该矩阵用于实现图形在模型空间中的旋转效果。
+组合后的模型矩阵用于实现图形在模型空间中的三维旋转效果。
 
 ### 2.2 视图变换（View）
 
@@ -59,9 +54,9 @@ CG-lab/
    - $b = -t$
    - $r = aspect\_ratio \cdot t$
    - $l = -r$
-2. 构造 $M_{persp\to ortho}$，将平截头体挤压到长方体。
+2. 构造 $M_{\text{persp}\rightarrow\text{ortho}}$，将平截头体挤压到长方体。
 3. 构造正交平移与缩放矩阵，得到 $M_{ortho}$。
-4. 最终投影矩阵：$M_{proj} = M_{ortho} @ M_{persp\to ortho}$。
+4. 最终投影矩阵：$M_{proj} = M_{ortho} \cdot M_{\text{persp}\rightarrow\text{ortho}}$。
 
 注意：本实验采用右手坐标系并看向 `-Z`，因此计算中使用 `n = -zNear`、`f = -zFar`。
 
@@ -69,7 +64,7 @@ CG-lab/
 
 对每个顶点使用列向量右乘规则：
 
-$$MVP = M_{proj} @ M_{view} @ M_{model}$$
+$$MVP = M_{proj} \cdot M_{view} \cdot M_{model}$$
 
 得到齐次坐标 `(x, y, z, w)` 后进行透视除法：
 
@@ -77,15 +72,15 @@ $$MVP = M_{proj} @ M_{view} @ M_{model}$$
 - `y_ndc = y / w`
 - `z_ndc = z / w`
 
-再将 NDC 区间 `[-1, 1]` 映射到屏幕坐标区间 `[0, 1]`，用于 Taichi GUI 绘制线框三角形。
+再将 NDC 区间 `[-1, 1]` 映射到屏幕坐标区间 `[0, 1]`，用于 Taichi GUI 绘制线框图元（基础为三角形，选做为立方体）。
 
 ## 三、运行方法
 
-环境要求：Python `>= 3.12`，Taichi `>= 1.7.4`，支持 CUDA/Vulkan 的 GPU（无独显时也可退化运行）。
+环境要求：Python `>= 3.12`，Taichi `>= 1.7.4`，NumPy `>= 2.3.3`，支持 CUDA/Vulkan 的 GPU（无独显时也可退化运行）。
 
 ```bash
-git clone https://github.com/HoganPrice/experiment-1.git
-cd experiment-1
+git clone https://github.com/HoganPrice/experiment-2.git
+cd experiment-2
 
 # 安装依赖（使用 uv）
 pip install uv
@@ -114,6 +109,8 @@ uv run python -m src.work1.main --dry-run
 | `Z_NEAR` | `0.1` | 近裁剪面距离 |
 | `Z_FAR` | `50.0` | 远裁剪面距离 |
 | `ROTATE_STEP_DEG` | `10.0` | 每次按键旋转步长（角度） |
+| `CUBE_VERTICES` | 8 个顶点 | 选做任务中的立方体顶点集合 |
+| `CUBE_EDGES` | 12 条边 | 选做任务中的立方体线框边集合 |
 
 ## 五、交互与效果展示
 
@@ -131,7 +128,7 @@ uv run python -m src.work1.main --dry-run
 
 ## 六、实验结论
 
-通过本实验，完成了从三维模型坐标到二维屏幕坐标的完整变换链路，实现并验证了 `Model`、`View`、`Projection` 三个 `4x4` 齐次矩阵的构造方法，掌握了在 Taichi 中进行矩阵计算、齐次坐标透视除法和线框几何体实时渲染的基本流程。
+通过本实验，完成了从三维模型坐标到二维屏幕坐标的完整变换链路，实现并验证了 `Model`、`View`、`Projection` 三个 `4x4` 齐次矩阵的构造方法，掌握了在 Taichi 中进行矩阵计算、齐次坐标透视除法和线框几何体实时渲染的基本流程。选做部分进一步实现了线框立方体、三轴旋转与图元切换，验证了 MVP 变换在真实三维几何体上的透视表现。
 
 ## 七、选做内容（仅供学有余力的同学选做）
 
@@ -160,5 +157,6 @@ uv run python -m src.work1.main --dry-run
 ## 八、依赖
 
 - [Taichi](https://github.com/taichi-dev/taichi) >= 1.7.4
+- NumPy >= 2.3.3
 - Python >= 3.12
 - 包管理工具：[uv](https://github.com/astral-sh/uv)
