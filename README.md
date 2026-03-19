@@ -56,7 +56,11 @@ experiment-2/
    - $l = -r$
 2. 构造 $M_{\mathrm{persp}\to\mathrm{ortho}}$，将平截头体挤压到长方体。
 3. 构造正交平移与缩放矩阵，得到 $M_{ortho}$。
-4. 最终投影矩阵：$M_{\mathrm{proj}} = M_{\mathrm{ortho}} \cdot M_{\mathrm{persp}\to\mathrm{ortho}}$。
+4. 最终投影矩阵为：
+
+$$
+M_{\mathrm{proj}} = M_{\mathrm{ortho}} \cdot M_{\mathrm{persp}\to\mathrm{ortho}}
+$$
 
 注意：本实验采用右手坐标系并看向 `-Z`，因此计算中使用 `n = -zNear`、`f = -zFar`。
 
