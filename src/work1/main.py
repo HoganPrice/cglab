@@ -8,6 +8,8 @@ import taichi as ti
 from .config import (
     ASPECT_RATIO,
     BACKGROUND_COLOR,
+    CUBE_EDGES,
+    CUBE_VERTICES,
     EDGE_COLORS,
     EYE_FOV,
     EYE_POS,
@@ -25,20 +27,49 @@ from .config import (
 ti.init(arch=ti.gpu)
 
 
-def get_model_matrix(angle: float) -> np.ndarray:
-    angle_rad = angle * math.pi / 180.0
-    cos_a = math.cos(angle_rad)
-    sin_a = math.sin(angle_rad)
+def get_model_matrix(angle_z: float, angle_y: float = 0.0, angle_x: float = 0.0) -> np.ndarray:
+    angle_x_rad = angle_x * math.pi / 180.0
+    angle_y_rad = angle_y * math.pi / 180.0
+    angle_z_rad = angle_z * math.pi / 180.0
 
-    return np.array(
+    cos_x = math.cos(angle_x_rad)
+    sin_x = math.sin(angle_x_rad)
+    cos_y = math.cos(angle_y_rad)
+    sin_y = math.sin(angle_y_rad)
+    cos_z = math.cos(angle_z_rad)
+    sin_z = math.sin(angle_z_rad)
+
+    rotation_x = np.array(
         [
-            [cos_a, -sin_a, 0.0, 0.0],
-            [sin_a, cos_a, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [0.0, cos_x, -sin_x, 0.0],
+            [0.0, sin_x, cos_x, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        dtype=np.float32,
+    )
+
+    rotation_y = np.array(
+        [
+            [cos_y, 0.0, sin_y, 0.0],
+            [0.0, 1.0, 0.0, 0.0],
+            [-sin_y, 0.0, cos_y, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+        dtype=np.float32,
+    )
+
+    rotation_z = np.array(
+        [
+            [cos_z, -sin_z, 0.0, 0.0],
+            [sin_z, cos_z, 0.0, 0.0],
             [0.0, 0.0, 1.0, 0.0],
             [0.0, 0.0, 0.0, 1.0],
         ],
         dtype=np.float32,
     )
+
+    return rotation_z @ rotation_y @ rotation_x
 
 
 def get_view_matrix(eye_pos: Iterable[float]) -> np.ndarray:
@@ -105,10 +136,10 @@ def get_projection_matrix(
     return ortho @ persp_to_ortho
 
 
-def project_vertices(mvp: np.ndarray) -> np.ndarray:
+def project_vertices(vertices: Iterable[Iterable[float]], mvp: np.ndarray) -> np.ndarray:
     screen_points = []
 
-    for vertex in TRIANGLE_VERTICES:
+    for vertex in vertices:
         point_homo = np.array([vertex[0], vertex[1], vertex[2], 1.0], dtype=np.float32)
         clip = mvp @ point_homo
         ndc = clip[:3] / clip[3]
@@ -123,7 +154,11 @@ def project_vertices(mvp: np.ndarray) -> np.ndarray:
 def run() -> None:
     gui = ti.GUI(WINDOW_TITLE, res=WINDOW_RES)
 
-    angle = 0.0
+    angle_z = 0.0
+    angle_y = 0.0
+    angle_x = 0.0
+    use_cube = True
+
     view = get_view_matrix(EYE_POS)
     projection = get_projection_matrix(EYE_FOV, ASPECT_RATIO, Z_NEAR, Z_FAR)
 
@@ -132,17 +167,29 @@ def run() -> None:
             if event.key == ti.GUI.ESCAPE:
                 gui.running = False
             elif event.key == "a":
-                angle += ROTATE_STEP_DEG
+                angle_z += ROTATE_STEP_DEG
             elif event.key == "d":
-                angle -= ROTATE_STEP_DEG
+                angle_z -= ROTATE_STEP_DEG
+            elif event.key == "w":
+                angle_y += ROTATE_STEP_DEG
+            elif event.key == "s":
+                angle_y -= ROTATE_STEP_DEG
+            elif event.key == "q":
+                angle_x += ROTATE_STEP_DEG
+            elif event.key == "e":
+                angle_x -= ROTATE_STEP_DEG
+            elif event.key == "t":
+                use_cube = not use_cube
 
-        model = get_model_matrix(angle)
+        model = get_model_matrix(angle_z, angle_y, angle_x)
         mvp = projection @ view @ model
-        points_2d = project_vertices(mvp)
+        active_vertices = CUBE_VERTICES if use_cube else TRIANGLE_VERTICES
+        active_edges = CUBE_EDGES if use_cube else TRIANGLE_EDGES
+        points_2d = project_vertices(active_vertices, mvp)
 
         gui.clear(BACKGROUND_COLOR)
 
-        for edge_idx, (start_idx, end_idx) in enumerate(TRIANGLE_EDGES):
+        for edge_idx, (start_idx, end_idx) in enumerate(active_edges):
             gui.line(
                 begin=points_2d[start_idx],
                 end=points_2d[end_idx],
@@ -150,21 +197,33 @@ def run() -> None:
                 color=EDGE_COLORS[edge_idx % len(EDGE_COLORS)],
             )
 
-        gui.text(content="A/D: Rotate | ESC: Exit", pos=(0.02, 0.96), color=0xFFFFFF)
+        shape_name = "Cube" if use_cube else "Triangle"
+        gui.text(
+            content=f"Shape: {shape_name} | T: Toggle",
+            pos=(0.02, 0.96),
+            color=0xFFFFFF,
+        )
+        gui.text(
+            content="A/D: Z  W/S: Y  Q/E: X  ESC: Exit",
+            pos=(0.02, 0.92),
+            color=0xFFFFFF,
+        )
         gui.show()
 
 
 def dry_run() -> None:
-    model = get_model_matrix(30.0)
+    model = get_model_matrix(angle_z=30.0, angle_y=20.0)
     view = get_view_matrix(EYE_POS)
     projection = get_projection_matrix(EYE_FOV, ASPECT_RATIO, Z_NEAR, Z_FAR)
     mvp = projection @ view @ model
-    points_2d = project_vertices(mvp)
+    triangle_points_2d = project_vertices(TRIANGLE_VERTICES, mvp)
+    cube_points_2d = project_vertices(CUBE_VERTICES, mvp)
 
     print("Model matrix:\n", model)
     print("View matrix:\n", view)
     print("Projection matrix:\n", projection)
-    print("Projected 2D points:\n", points_2d)
+    print("Projected 2D points (triangle):\n", triangle_points_2d)
+    print("Projected 2D points (cube):\n", cube_points_2d)
 
 
 def main() -> None:
