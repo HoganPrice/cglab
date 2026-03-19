@@ -123,11 +123,9 @@ uv run python -m src.work1.main --dry-run
 - `D`：顺时针旋转（绕 `Z` 轴）
 - `Esc`：退出程序
 
-可在本节补充你的运行截图/GIF（例如 `video.gif`）：
+运行效果如下（`video_1.gif`）：
 
-```markdown
-![实验二运行效果](video.gif)
-```
+![实验二运行效果](video_1.gif)
 
 ## 六、实验结论
 
