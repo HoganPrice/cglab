@@ -54,9 +54,9 @@ experiment-2/
    - $b = -t$
    - $r = aspect\_ratio \cdot t$
    - $l = -r$
-2. 构造 $M_{\text{persp}\rightarrow\text{ortho}}$，将平截头体挤压到长方体。
+2. 构造 $M_{\mathrm{persp}\to\mathrm{ortho}}$，将平截头体挤压到长方体。
 3. 构造正交平移与缩放矩阵，得到 $M_{ortho}$。
-4. 最终投影矩阵：$M_{proj} = M_{ortho} \cdot M_{\text{persp}\rightarrow\text{ortho}}$。
+4. 最终投影矩阵：$M_{\mathrm{proj}} = M_{\mathrm{ortho}} \cdot M_{\mathrm{persp}\to\mathrm{ortho}}$。
 
 注意：本实验采用右手坐标系并看向 `-Z`，因此计算中使用 `n = -zNear`、`f = -zFar`。
 
@@ -140,7 +140,7 @@ uv run python -m src.work1.main --dry-run
 
 - 构建三维几何体：在代码中定义一个三维正方体（Cube）。正方体有 8 个顶点和 12 条边，请将其中心放置在原点 `(0, 0, 0)`，边长为 2（即顶点坐标在 `[-1, 1]` 之间）。
 - 修改渲染逻辑：将原本用于三角形的循环绘制逻辑，修改为遍历正方体的 12 条边进行线框绘制。
-- 观察 3D 效果：你可以沿用基础任务中的模型旋转矩阵（或者尝试自己写一个绕 `Y` 轴或 `X` 轴旋转的矩阵）。通过 $$MVP$$ 矩阵变换后，你应该能在屏幕上看到一个具有透视效果的立体正方体在旋转。
+- 观察 3D 效果：你可以沿用基础任务中的模型旋转矩阵（或者尝试自己写一个绕 `Y` 轴或 `X` 轴旋转的矩阵）。通过 $MVP$ 矩阵变换后，你应该能在屏幕上看到一个具有透视效果的立体正方体在旋转。
 
 ### 7.3 完成情况
 
