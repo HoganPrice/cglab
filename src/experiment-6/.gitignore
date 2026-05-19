@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+!outputs/
+outputs/**
+!outputs/silhouette_400/
+!outputs/silhouette_400/silhouette_progress.gif
+!outputs/joint_400/
+!outputs/joint_400/joint_rgb_progress.gif
+*.log
