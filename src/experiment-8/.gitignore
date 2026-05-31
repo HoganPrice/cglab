@@ -1,0 +1,5 @@
+data/SMPL*.pkl
+data/*.npz
+outputs/*.mp4
+outputs/_anim_frame_*.png
+__pycache__/

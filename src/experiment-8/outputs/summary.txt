@@ -1,0 +1,17 @@
+Experiment 8 - SMPL LBS Summary
+
+vertices: 6890
+faces: 13776
+joints: 24
+betas dimension: 10
+mean absolute error: 0.0000000000e+00
+max absolute error: 0.0000000000e+00
+
+outputs:
+- stage_a_template_weights.png
+- all_joint_weights.png
+- stage_b_shaped_joints.png
+- stage_c_pose_offsets.png
+- stage_d_lbs_result.png
+- comparison_grid.png
+- optional_pose_animation.gif
